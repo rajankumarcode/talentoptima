@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillAssign - Projects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="module-pages.css">
+  <style>
+    .project-modal, .project-details {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(3, 7, 18, .76);
+      backdrop-filter: blur(5px);
+    }
+    .project-modal[hidden], .project-details[hidden] { display: none; }
+    .project-dialog {
+      width: min(760px, 100%);
+      max-height: min(90vh, 900px);
+      overflow-y: auto;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .45);
+    }
+    .project-dialog.small { width: min(600px, 100%); }
+    .dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+    .dialog-heading h2 { font-size: 19px; }
+    .dialog-heading p { margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .dialog-close { color: var(--muted); background: transparent; font-size: 23px; line-height: 1; }
+    .project-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .project-field { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+    .project-field.full { grid-column: 1 / -1; }
+    .project-field label { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .project-field input, .project-field select, .project-field textarea {
+      width: 100%;
+      min-height: 40px;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      outline: 0;
+      color: var(--text);
+      background: #111a2b;
+      font-size: 13px;
+      caret-color: auto;
+    }
+    .project-field input:focus, .project-field select:focus, .project-field textarea:focus { border-color: var(--purple); }
+    .project-field input[readonly] { color: var(--cyan); }
+    .project-field select option { color: var(--text); background: var(--card); }
+    .project-field textarea { min-height: 90px; resize: vertical; }
+    .skill-picker { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 11px; border: 1px solid var(--border); border-radius: 8px; }
+    .skill-option { display: flex; align-items: center; gap: 6px; color: #e2e8f0; font-size: 11px; }
+    .skill-option input { width: auto; min-height: auto; accent-color: var(--purple); }
+    .form-error { min-height: 15px; color: var(--red); font-size: 11px; }
+    .form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
+    .secondary-btn, .row-action {
+      padding: 9px 13px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .secondary-btn:hover, .row-action:hover { color: var(--text); background: rgba(255,255,255,.05); }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .row-action { padding: 6px 8px; font-size: 10px; }
+    .row-action.delete { color: var(--red); }
+    .project-name-link { padding: 0; color: var(--text); background: transparent; text-align: left; font: inherit; font-weight: 600; }
+    .project-name-link:hover { color: var(--cyan); }
+    .team-list { display: grid; gap: 8px; }
+    .team-member { padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,.025); }
+    .team-member strong { display: block; font-size: 12px; }
+    .team-member span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+    .detail-item { min-width: 0; }
+    .detail-label { color: var(--muted); font-size: 11px; }
+    .detail-value { margin-top: 5px; overflow-wrap: anywhere; font-size: 13px; }
+    .detail-description { white-space: pre-wrap; line-height: 1.5; }
+    .detail-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); }
+    .detail-controls input[type="range"] { width: 100%; accent-color: var(--purple); }
+    .notification {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 30;
+      max-width: min(400px, calc(100vw - 32px));
+      padding: 13px 16px;
+      border: 1px solid rgba(52,211,153,.3);
+      border-radius: 9px;
+      color: var(--green);
+      background: var(--card);
+      box-shadow: 0 12px 35px rgba(0,0,0,.3);
+      font-size: 13px;
+    }
+    .notification.error { color: var(--red); border-color: rgba(248,113,113,.35); }
+    @media (max-width: 650px) {
+      .project-dialog { padding: 18px; }
+      .project-form { grid-template-columns: 1fr; gap: 13px; }
+      .project-field.full, .form-actions { grid-column: auto; }
+      .skill-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .detail-grid, .detail-controls { grid-template-columns: 1fr; }
+      .filters { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">✦</div><span>Talent Optima</span>
+      </div>
+      <nav class="nav">
+        <button class="nav-item" data-page="Dashboard"><span
+            class="nav-icon">⌂</span><span>Dashboard</span></button><button class="nav-item" data-page="Employees"><span
+            class="nav-icon">♧</span><span>Employees</span></button><button class="nav-item active"
+          data-page="Projects"><span class="nav-icon">▣</span><span>Projects</span></button><button class="nav-item"
+          data-page="Assignments"><span class="nav-icon">♙</span><span>Assignments</span></button><button
+          class="nav-item" data-page="Reports"><span class="nav-icon">▤</span><span>Reports</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="goal-card">
+          <div class="goal-icon">◎</div>
+          <strong>Better Skills<br>Better Teams<br>Bigger Goals</strong>
+          <div class="goal-glow"></div>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search projects...">
+        </div>
+        <div class="admin">
+          <div class="avatar">A</div><span>Admin</span>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-heading">
+          <div>
+            <h1>Projects</h1>
+            <p>Plan, monitor, and deliver your team's projects.</p>
+          </div><button class="primary-btn" id="addProject">＋ New Project</button>
+        </div>
+        <section class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Projects</div>
+            <div class="stat-value" id="totalProjects">0</div>
+            <div class="stat-note">Saved projects</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">In Progress</div>
+            <div class="stat-value" id="inProgressProjects">0</div>
+            <div class="stat-note">Currently active</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value" id="completedProjects">0</div>
+            <div class="stat-note">100% progress</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">At Risk</div>
+            <div class="stat-value" id="atRiskProjects">0</div>
+            <div class="stat-note" style="color:var(--orange)">Critical or overdue</div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Project Portfolio</h2>
+              <p>Current status of all active projects</p>
+            </div>
+            <div class="filters"><select class="filter" id="statusFilter">
+                <option>All statuses</option>
+                <option>In Progress</option>
+                <option>Planning</option>
+                <option>On Hold</option>
+              </select><select class="filter" id="sortFilter">
+                <option>Sort: Recent</option>
+                <option>Sort: Deadline</option>
+              </select></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th>Owner</th>
+                  <th>Team</th>
+                  <th>Progress</th>
+                  <th>Deadline</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="projectRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div class="project-modal" id="projectModal" hidden>
+    <section class="project-dialog" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
+      <div class="dialog-heading">
+        <div><h2 id="projectModalTitle">New project</h2><p>Capture the details your team needs to get started.</p></div>
+        <button class="dialog-close" type="button" data-close-modal aria-label="Close dialog">×</button>
+      </div>
+      <form class="project-form" id="projectForm" novalidate>
+        <div class="project-field">
+          <label for="projectId">Project ID</label>
+          <input id="projectId" name="id" readonly>
+        </div>
+        <div class="project-field">
+          <label for="projectName">Project name <span aria-hidden="true">*</span></label>
+          <input id="projectName" name="name" maxlength="100" required placeholder="e.g. Customer Portal">
+          <span class="form-error" id="nameError"></span>
+        </div>
+        <div class="project-field">
+          <label for="projectClient">Client / Company name</label>
+          <input id="projectClient" name="client" maxlength="100" placeholder="Company or client">
+        </div>
+        <div class="project-field">
+          <label for="projectOwner">Project owner</label>
+          <select id="projectOwner" name="owner"><option value="">No owner selected</option></select>
+        </div>
+        <div class="project-field">
+          <label for="projectLeader">Project leader <span aria-hidden="true">*</span></label>
+          <select id="projectLeader" name="projectLeaderId" required><option value="">Select a project leader</option></select>
+          <span class="form-error" id="leaderError"></span>
+        </div>
+        <div class="project-field full">
+          <label for="projectDescription">Project description</label>
+          <textarea id="projectDescription" name="description" maxlength="2000" placeholder="What are the goals and deliverables?"></textarea>
+        </div>
+        <div class="project-field full">
+          <label>Required skills</label>
+          <div class="skill-picker" id="skillPicker"></div>
+        </div>
+        <div class="project-field">
+          <label for="projectStartDate">Start date</label>
+          <input id="projectStartDate" name="startDate" type="date">
+          <span class="form-error" id="dateError"></span>
+        </div>
+        <div class="project-field">
+          <label for="projectDeadline">Deadline</label>
+          <input id="projectDeadline" name="deadline" type="date">
+        </div>
+        <div class="project-field">
+          <label for="projectPriority">Priority</label>
+          <select id="projectPriority" name="priority">
+            <option>Low</option><option selected>Medium</option><option>High</option><option>Critical</option>
+          </select>
+        </div>
+        <div class="project-field">
+          <label for="projectStatus">Project status</label>
+          <select id="projectStatus" name="status">
+            <option>Planning</option><option>In Progress</option><option>On Hold</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button class="secondary-btn" type="button" data-close-modal>Cancel</button>
+          <button class="primary-btn" type="submit" id="saveProjectButton">Save Project</button>
+        </div>
+      </form>
+    </section>
+  </div>
+  <div class="project-details" id="detailsModal" hidden>
+    <section class="project-dialog small" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
+      <div class="dialog-heading">
+        <div><h2 id="detailsTitle">Project details</h2><p id="detailsSubtitle"></p></div>
+        <button class="dialog-close" type="button" data-close-details aria-label="Close dialog">×</button>
+      </div>
+      <div id="detailsContent"></div>
+    </section>
+  </div>
+  <div class="notification" id="notification" role="status" hidden></div>
+  <script src="navigation.js"></script>
+  <script src="employee-data.js"></script>
+  <script>
+    (() => {
+      const storageKey = "skillAssignProjects";
+      const assignmentKey = "skillAssignAssignments";
+      const skills = ["HTML", "CSS", "JavaScript", "Java", "Python", "React", "MySQL", "TypeScript", "Node.js", "C#", "AWS", "Docker"];
+      const projectRows = document.getElementById("projectRows");
+      const projectForm = document.getElementById("projectForm");
+      const projectModal = document.getElementById("projectModal");
+      const detailsModal = document.getElementById("detailsModal");
+      const notification = document.getElementById("notification");
+      let projects = [];
+      let notificationTimer;
+
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[character]);
+      }
+
+      function readRecords(key) {
+        const saved = localStorage.getItem(key);
+        if (saved === null) return [];
+        const records = JSON.parse(saved);
+        if (!Array.isArray(records)) throw new Error(`Saved ${key === storageKey ? "project" : "assignment"} data is invalid.`);
+        if (key === storageKey && records.some(record => !record || typeof record.id !== "string" || typeof record.name !== "string")) {
+          throw new Error("Saved project data is invalid.");
+        }
+        if (key === assignmentKey && records.some(record => !record || typeof record !== "object")) {
+          throw new Error("Saved assignment data is invalid.");
+        }
+        return records;
+      }
+
+      function saveProjects(records = projects) {
+        localStorage.setItem(storageKey, JSON.stringify(records));
+      }
+
+      function getAssignments() {
+        return readRecords(assignmentKey);
+      }
+
+      function assignedTo(project) {
+        const members = getAssignments().filter(assignment =>
+          assignment.status === "Active" &&
+          (assignment.projectId === project.id || assignment.project === project.name || assignment.projectName === project.name)
+        );
+        return [...new Map(members.map((assignment, index) => [
+          assignment.employeeId || assignment.employeeName || assignment.employee || `assignment-${index}`,
+          assignment
+        ])).values()];
+      }
+
+      function formatDate(value) {
+        if (!value) return "—";
+        const date = new Date(`${value}T00:00:00`);
+        return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+      }
+
+      function statusClass(status) {
+        return status === "In Progress" ? "blue" : status === "On Hold" ? "orange" : "green";
+      }
+
+      function render() {
+        const query = document.getElementById("searchInput").value.trim().toLowerCase();
+        const status = document.getElementById("statusFilter").value;
+        const sort = document.getElementById("sortFilter").value;
+        const visibleProjects = projects.filter(project =>
+          (status === "All statuses" || project.status === status) &&
+          `${project.id} ${project.name} ${project.client} ${project.owner} ${project.projectLeaderName} ${project.description} ${(project.skills || []).join(" ")}`.toLowerCase().includes(query)
+        );
+        visibleProjects.sort((first, second) => sort === "Sort: Deadline"
+          ? (first.deadline || "9999-12-31").localeCompare(second.deadline || "9999-12-31")
+          : (second.createdAt || "").localeCompare(first.createdAt || ""));
+
+        projectRows.innerHTML = visibleProjects.length ? visibleProjects.map(project => {
+          const teamSize = assignedTo(project).length;
+          const progress = Math.max(0, Math.min(100, Number(project.progress) || 0));
+          return `<tr>
+            <td><button class="project-name-link" type="button" data-action="view" data-id="${escapeHtml(project.id)}">${escapeHtml(project.name)}</button><div class="list-meta">${escapeHtml(project.client || project.id)}</div></td>
+            <td>${escapeHtml(project.owner || "—")}</td>
+            <td>${teamSize} ${teamSize === 1 ? "member" : "members"}</td>
+            <td><div class="progress-cell"><div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div><span class="progress-number">${progress}%</span></div></td>
+            <td>${escapeHtml(formatDate(project.deadline))}</td>
+            <td><span class="badge ${statusClass(project.status)}">${escapeHtml(project.status)}</span></td>
+            <td><div class="row-actions">
+              <button class="row-action" type="button" data-action="view" data-id="${escapeHtml(project.id)}">View</button>
+              <button class="row-action" type="button" data-action="edit" data-id="${escapeHtml(project.id)}">Edit</button>
+              <button class="row-action delete" type="button" data-action="delete" data-id="${escapeHtml(project.id)}">Delete</button>
+            </div></td>
+          </tr>`;
+        }).join("") : `<tr><td colspan="7" style="padding:28px;text-align:center;color:var(--muted)">No saved projects${query || status !== "All statuses" ? " match these filters." : " yet. Select “＋ New Project” to create one."}</td></tr>`;
+
+        document.getElementById("totalProjects").textContent = projects.length;
+        document.getElementById("inProgressProjects").textContent = projects.filter(project => project.status === "In Progress").length;
+        document.getElementById("completedProjects").textContent = projects.filter(project => Number(project.progress) >= 100).length;
+        const today = new Date().toISOString().slice(0, 10);
+        document.getElementById("atRiskProjects").textContent = projects.filter(project =>
+          project.priority === "Critical" || (project.deadline && project.deadline < today && Number(project.progress) < 100)
+        ).length;
+      }
+
+      function showNotification(message, isError = false) {
+        clearTimeout(notificationTimer);
+        notification.textContent = message;
+        notification.classList.toggle("error", isError);
+        notification.hidden = false;
+        notificationTimer = setTimeout(() => { notification.hidden = true; }, 3500);
+      }
+
+      function populateOwners(selected = "") {
+        const ownerSelect = document.getElementById("projectOwner");
+        const employees = SkillAssignEmployeeStore.getAll();
+        ownerSelect.innerHTML = '<option value="">No owner selected</option>' +
+          employees.map(employee => `<option value="${escapeHtml(employee.name)}">${escapeHtml(employee.name)}${employee.role ? ` · ${escapeHtml(employee.role)}` : ""}</option>`).join("");
+        ownerSelect.value = selected;
+      }
+
+      function populateProjectLeaders(selectedId = "") {
+        const leaderSelect = document.getElementById("projectLeader");
+        const employees = SkillAssignEmployeeStore.getAll();
+        leaderSelect.innerHTML = '<option value="">Select a project leader</option>' +
+          employees.map(employee => `<option value="${escapeHtml(employee.id)}">${escapeHtml(employee.name)} · ${escapeHtml(employee.id)}${employee.role ? ` · ${escapeHtml(employee.role)}` : ""}</option>`).join("");
+        leaderSelect.value = selectedId;
+      }
+
+      function nextProjectId() {
+        const existing = new Set(projects.map(project => project.id));
+        let sequence = 1;
+        while (existing.has(`PRJ-${String(sequence).padStart(3, "0")}`)) sequence += 1;
+        return `PRJ-${String(sequence).padStart(3, "0")}`;
+      }
+
+      function openProjectForm(project = null) {
+        projectForm.reset();
+        document.getElementById("nameError").textContent = "";
+        document.getElementById("dateError").textContent = "";
+        document.getElementById("leaderError").textContent = "";
+        document.getElementById("projectModalTitle").textContent = project ? "Edit project" : "New project";
+        document.getElementById("saveProjectButton").textContent = project ? "Save Changes" : "Save Project";
+        document.getElementById("projectId").value = project ? project.id : nextProjectId();
+        try {
+          populateOwners(project?.owner || "");
+          populateProjectLeaders(project?.projectLeaderId || "");
+        } catch (error) {
+          showNotification(`Unable to load project employees: ${error.message}`, true);
+          return;
+        }
+        document.getElementById("projectClient").value = project?.client || "";
+        document.getElementById("projectName").value = project?.name || "";
+        document.getElementById("projectDescription").value = project?.description || "";
+        document.getElementById("projectStartDate").value = project?.startDate || "";
+        document.getElementById("projectDeadline").value = project?.deadline || "";
+        document.getElementById("projectPriority").value = project?.priority || "Medium";
+        document.getElementById("projectStatus").value = project?.status || "Planning";
+        document.querySelectorAll("#skillPicker input").forEach(input => { input.checked = (project?.skills || []).includes(input.value); });
+        projectModal.hidden = false;
+        document.getElementById("projectName").focus();
+      }
+
+      function closeProjectForm() {
+        projectModal.hidden = true;
+      }
+
+      function saveProject(event) {
+        event.preventDefault();
+        const name = document.getElementById("projectName").value.trim();
+        const startDate = document.getElementById("projectStartDate").value;
+        const deadline = document.getElementById("projectDeadline").value;
+        const leaderId = document.getElementById("projectLeader").value;
+        let selectedLeader;
+        try {
+          selectedLeader = SkillAssignEmployeeStore.getAll().find(employee => employee.id === leaderId);
+        } catch (error) {
+          showNotification(`Unable to validate project leader: ${error.message}`, true);
+          return;
+        }
+        document.getElementById("nameError").textContent = name ? "" : "Project name is required.";
+        const invalidDateRange = startDate && deadline && deadline < startDate;
+        document.getElementById("dateError").textContent = invalidDateRange ? "Deadline must be on or after the start date." : "";
+        document.getElementById("leaderError").textContent = selectedLeader ? "" : "Select an existing employee as project leader.";
+        if (!name || invalidDateRange || !selectedLeader) {
+          if (!name) document.getElementById("projectName").focus();
+          else if (invalidDateRange) document.getElementById("projectDeadline").focus();
+          else document.getElementById("projectLeader").focus();
+          return;
+        }
+
+        const id = document.getElementById("projectId").value;
+        const existingIndex = projects.findIndex(project => project.id === id);
+        const previous = existingIndex >= 0 ? projects[existingIndex] : null;
+        const leader = selectedLeader;
+        const record = {
+          id,
+          name,
+          client: document.getElementById("projectClient").value.trim(),
+          owner: document.getElementById("projectOwner").value,
+          projectLeaderId: leader?.id || "",
+          projectLeaderName: leader?.name || "",
+          description: document.getElementById("projectDescription").value.trim(),
+          skills: [...document.querySelectorAll("#skillPicker input:checked")].map(input => input.value),
+          startDate,
+          deadline,
+          priority: document.getElementById("projectPriority").value,
+          status: document.getElementById("projectStatus").value,
+          progress: previous ? Number(previous.progress) || 0 : 0,
+          createdAt: previous?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        try {
+          const updatedProjects = [...projects];
+          if (existingIndex >= 0) updatedProjects[existingIndex] = record;
+          else updatedProjects.push(record);
+          saveProjects(updatedProjects);
+          projects = updatedProjects;
+          render();
+          closeProjectForm();
+          showNotification(previous ? "Project updated successfully." : `${record.id} created successfully.`);
+        } catch (error) {
+          showNotification(`Unable to save project: ${error.message}`, true);
+        }
+      }
+
+      function showDetails(id) {
+        const project = projects.find(item => item.id === id);
+        if (!project) return;
+        const team = assignedTo(project);
+        const employeesById = new Map(SkillAssignEmployeeStore.getAll().map(employee => [employee.id, employee]));
+        const teamDetails = team.map(assignment => {
+          const employee = employeesById.get(assignment.employeeId);
+          const name = employee?.name || assignment.employeeName || assignment.employee || assignment.name || "Employee";
+          const employeeId = employee?.id || assignment.employeeId || "ID unavailable";
+          const role = employee?.role || "Role unavailable";
+          return `<div class="team-member"><strong>${escapeHtml(name)} · ${escapeHtml(employeeId)}</strong><span>${escapeHtml(role)} · ${escapeHtml(assignment.allocation ?? "—")}% allocation</span></div>`;
+        }).join("");
+        const leader = employeesById.get(project.projectLeaderId);
+        const projectLeaderName = leader?.name || project.projectLeaderName || "No project leader selected";
+        const projectLeaderId = leader?.id || project.projectLeaderId;
+        document.getElementById("detailsTitle").textContent = project.name;
+        document.getElementById("detailsSubtitle").textContent = project.id;
+        document.getElementById("detailsContent").innerHTML = `
+          <div class="detail-grid">
+            <div class="detail-item"><div class="detail-label">Client / Company</div><div class="detail-value">${escapeHtml(project.client || "—")}</div></div>
+            <div class="detail-item"><div class="detail-label">Project owner</div><div class="detail-value">${escapeHtml(project.owner || "—")}</div></div>
+            <div class="detail-item"><div class="detail-label">Project leader</div><div class="detail-value">${escapeHtml(projectLeaderId ? `${projectLeaderName} (${projectLeaderId})` : projectLeaderName)}</div></div>
+            <div class="detail-item"><div class="detail-label">Start date</div><div class="detail-value">${escapeHtml(formatDate(project.startDate))}</div></div>
+            <div class="detail-item"><div class="detail-label">Deadline</div><div class="detail-value">${escapeHtml(formatDate(project.deadline))}</div></div>
+            <div class="detail-item"><div class="detail-label">Priority</div><div class="detail-value">${escapeHtml(project.priority)}</div></div>
+            <div class="detail-item"><div class="detail-label">Team members (${team.length})</div><div class="detail-value team-list">${team.length ? teamDetails : "No employees assigned"}</div></div>
+            <div class="detail-item"><div class="detail-label">Required skills</div><div class="detail-value">${escapeHtml((project.skills || []).join(", ") || "None specified")}</div></div>
+            <div class="detail-item"><div class="detail-label">Description</div><div class="detail-value detail-description">${escapeHtml(project.description || "No description provided.")}</div></div>
+          </div>
+          <div class="detail-controls">
+            <div class="project-field"><label for="detailStatus">Project status</label><select id="detailStatus" class="filter"><option>Planning</option><option>In Progress</option><option>On Hold</option></select></div>
+            <div class="project-field"><label for="detailProgress">Progress: <span id="detailProgressValue">${Number(project.progress) || 0}%</span></label><input id="detailProgress" type="range" min="0" max="100" value="${Math.max(0, Math.min(100, Number(project.progress) || 0))}"></div>
+          </div>
+          <div class="form-actions" style="margin-top:16px">
+            <button class="secondary-btn" type="button" data-close-details>Close</button>
+            <button class="primary-btn" type="button" data-save-details="${escapeHtml(id)}">Save Status &amp; Progress</button>
+          </div>`;
+        document.getElementById("detailStatus").value = project.status;
+        const progressInput = document.getElementById("detailProgress");
+        progressInput.addEventListener("input", () => { document.getElementById("detailProgressValue").textContent = `${progressInput.value}%`; });
+        detailsModal.hidden = false;
+      }
+
+      function saveDetails(id) {
+        const project = projects.find(item => item.id === id);
+        if (!project) return;
+        const updatedProjects = projects.map(item => item.id === id ? {
+          ...item,
+          status: document.getElementById("detailStatus").value,
+          progress: Number(document.getElementById("detailProgress").value),
+          updatedAt: new Date().toISOString()
+        } : item);
+        try {
+          saveProjects(updatedProjects);
+          projects = updatedProjects;
+          detailsModal.hidden = true;
+          render();
+          showNotification("Project status and progress updated.");
+        } catch (error) {
+          showNotification(`Unable to update project: ${error.message}`, true);
+        }
+      }
+
+      skills.forEach(skill => {
+        const label = document.createElement("label");
+        label.className = "skill-option";
+        label.innerHTML = `<input type="checkbox" value="${escapeHtml(skill)}"><span>${escapeHtml(skill)}</span>`;
+        document.getElementById("skillPicker").append(label);
+      });
+
+      document.getElementById("addProject").addEventListener("click", () => openProjectForm());
+      projectForm.addEventListener("submit", saveProject);
+      document.querySelectorAll("[data-close-modal]").forEach(button => button.addEventListener("click", closeProjectForm));
+      document.querySelectorAll("[data-close-details]").forEach(button => button.addEventListener("click", () => { detailsModal.hidden = true; }));
+      projectModal.addEventListener("click", event => { if (event.target === projectModal) closeProjectForm(); });
+      detailsModal.addEventListener("click", event => { if (event.target === detailsModal) detailsModal.hidden = true; });
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") { closeProjectForm(); detailsModal.hidden = true; }
+      });
+      projectRows.addEventListener("click", event => {
+        const button = event.target.closest("[data-action]");
+        if (!button) return;
+        const { action, id } = button.dataset;
+        const project = projects.find(item => item.id === id);
+        if (!project) return;
+        if (action === "view") showDetails(id);
+        if (action === "edit") openProjectForm(project);
+        if (action === "delete" && window.confirm(`Delete “${project.name}” (${project.id}) and its assignments? This cannot be undone.`)) {
+          const updatedProjects = projects.filter(item => item.id !== id);
+          const previousProjects = localStorage.getItem(storageKey);
+          const previousAssignments = localStorage.getItem(assignmentKey);
+          const previousEmployees = localStorage.getItem("skillAssignEmployees");
+          try {
+            const assignments = readRecords(assignmentKey).filter(assignment =>
+              assignment.projectId !== id && assignment.project !== project.name && assignment.projectName !== project.name
+            );
+            saveProjects(updatedProjects);
+            localStorage.setItem(assignmentKey, JSON.stringify(assignments));
+            SkillAssignEmployeeStore.syncWorkloads(assignments);
+            projects = updatedProjects;
+            render();
+            showNotification("Project and related assignments deleted.");
+          } catch (error) {
+            try {
+              if (previousProjects === null) localStorage.removeItem(storageKey);
+              else localStorage.setItem(storageKey, previousProjects);
+              if (previousAssignments === null) localStorage.removeItem(assignmentKey);
+              else localStorage.setItem(assignmentKey, previousAssignments);
+              if (previousEmployees === null) localStorage.removeItem("skillAssignEmployees");
+              else localStorage.setItem("skillAssignEmployees", previousEmployees);
+            } catch (restoreError) {
+              showNotification(`Project deletion failed and storage could not be fully restored: ${restoreError.message}`, true);
+              return;
+            }
+            showNotification(`Unable to delete project: ${error.message}`, true);
+          }
+        }
+      });
+      document.getElementById("detailsContent").addEventListener("click", event => {
+        const button = event.target.closest("[data-save-details]");
+        if (button) saveDetails(button.dataset.saveDetails);
+      });
+      document.getElementById("searchInput").addEventListener("input", render);
+      document.getElementById("statusFilter").addEventListener("change", render);
+      document.getElementById("sortFilter").addEventListener("change", render);
+      window.addEventListener("storage", event => {
+        if (event.key === storageKey || event.key === assignmentKey) {
+          try {
+            if (event.key === storageKey) projects = readRecords(storageKey);
+            render();
+          } catch (error) {
+            showNotification(`Unable to refresh project data: ${error.message}`, true);
+          }
+        }
+      });
+
+      try {
+        projects = readRecords(storageKey);
+        render();
+      } catch (error) {
+        showNotification(`Unable to load projects: ${error.message}`, true);
+        projectRows.innerHTML = `<tr><td colspan="7" style="padding:28px;color:var(--red)">Project data could not be loaded.</td></tr>`;
+      }
+    })();
+  </script>
+</body>
+
+</html>

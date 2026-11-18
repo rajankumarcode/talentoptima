@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Employee Skills & Project Allocation</title>
+
+    <style>
+        /* RESET  */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f7f9fc;
+            color: #172033;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+
+        /* NAVBAR  */
+
+        .navbar {
+            padding: 1.75rem 6%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80px;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            padding: 0;
+            background: transparent;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 999;
+            transition: all 0.3s ease;
+            font-family: 'Ubuntu', sans-serif;
+
+        }
+
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 2rem;
+            max-width: 1600px;
+        }
+
+        .navbar-logo {
+            display: inline-flex;
+            align-items: center;
+            height: 50px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .navbar-logo img {
+            display: block;
+            width: auto;
+            height: 48px;
+            max-width: min(52vw, 220px);
+            object-fit: contain;
+        }
+
+        .navbar-manu {
+            display: flex;
+            text-align: center;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .navbar-manu a {
+            text-decoration: none;
+            color:#1e40af;
+            font-size: 1.3rem;
+            font-weight: 800;
+            padding: 3px 20px;
+            border-radius: 20px;
+            border: 2px solid transparent;
+            transition: all 0.7s ease;
+            white-space: nowrap;
+        }
+
+        .navbar-manu a:hover {
+            color: #3346f1;
+        }
+
+        .navbar-toggle {
+            display: none;
+            background: transparent;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .bar {
+            display: block;
+            width: 25px;
+            height: 3px;
+            margin: 5px auto;
+            background: rgb(51, 51, 78);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .btn {
+            padding: 11px 20px;
+             background: linear-gradient(135deg,
+                    #223866,
+                    #1e40af);
+            color: rgb(255, 253, 253) !important;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+
+        /* HERO  */
+
+        .hero {
+            width: 90%;
+            max-width: 1200px;
+            min-height: 680px;
+            margin: auto;
+
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+
+            gap: 60px;
+            padding: 80px 0;
+        }
+
+        .hero-badge {
+            display: inline-block;
+
+            padding: 8px 15px;
+            margin-bottom: 20px;
+
+            background: #eaf2ff;
+            color: #2563eb;
+
+            border-radius: 30px;
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .hero h1 {
+            font-size: clamp(42px, 5vw, 65px);
+            line-height: 1.08;
+            color: #000000;
+
+            margin-bottom: 25px;
+        }
+
+        .hero h1 span {
+            color: #223866;
+        }
+
+        .hero p {
+            max-width: 580px;
+
+            font-size: 18px;
+            color: #64748b;
+
+            margin-bottom: 30px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .primary-btn,
+        .secondary-btn {
+            display: inline-block;
+
+            padding: 14px 24px;
+
+            border-radius: 8px;
+
+            font-weight: 700;
+
+            transition: 0.3s;
+        }
+
+        .primary-btn {
+            background: #2f4f94;
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-3px);
+        }
+
+        .secondary-btn {
+            border: 1px solid #dbe2ec;
+            background: white;
+            color: #334155;
+        }
+
+        .secondary-btn:hover {
+            color: #2563eb;
+            border-color: #2563eb;
+        }
+
+
+        /* HERO IMAGE  */
+
+        .hero-image {
+            position: relative;
+            text-align: center;
+        }
+
+        .hero-image img {
+            width: 100%;
+            max-width: 530px;
+
+            animation: floating 4s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .floating-card {
+            position: absolute;
+
+            background: white;
+
+            padding: 14px 18px;
+
+            border-radius: 12px;
+
+            box-shadow: 0 15px 40px rgba(15, 23, 42, 0.12);
+
+            font-weight: 700;
+            z-index: 2;
+        }
+
+        .card-one {
+            top: 20%;
+            left: 0;
+        }
+
+        .card-two {
+            right: 0;
+            bottom: 15%;
+        }
+
+
+        /* COMMON SECTION  */
+
+        .section {
+            width: 90%;
+            max-width: 1200px;
+
+            margin: auto;
+
+            padding: 100px 0;
+        }
+
+        .section-heading {
+            max-width: 700px;
+
+            margin: 0 auto 55px;
+
+            text-align: center;
+        }
+
+        .section-heading span {
+            color: #3e578d;
+
+            font-size: 13px;
+            font-weight: 800;
+
+            letter-spacing: 2px;
+        }
+
+        .section-heading h2 {
+            margin: 12px 0;
+
+            font-size: 40px;
+            line-height: 1.2;
+        }
+
+        .section-heading strong {
+            color: #25458b;
+        }
+
+        .section-heading p {
+            color: #64748b;
+        }
+
+
+        /* FEATURES  */
+
+        #features {
+            width: 100%;
+            background: white;
+        }
+
+        .feature-grid {
+            width: 90%;
+            max-width: 1200px;
+
+            margin: auto;
+
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+
+            gap: 20px;
+        }
+
+        .feature-card {
+            padding: 30px 25px;
+
+            background: #f8fafc;
+
+            border: 1px solid #e5eaf2;
+            border-radius: 15px;
+
+            transition: 0.35s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+
+            background: white;
+
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
+
+            border-color: #cbdcff;
+        }
+
+        .feature-icon {
+            width: 55px;
+            height: 55px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #eaf2ff;
+            color: #223866;
+
+            border-radius: 12px;
+
+            font-size: 25px;
+
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .feature-card a {
+            color: #5c72a3;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+
+        /* HOW IT WORKS  */
+
+        .how-section {
+            background: transparent;
+        }
+
+        .steps {
+            display: grid;
+
+            grid-template-columns: repeat(4, 1fr);
+
+            gap: 20px;
+        }
+
+        .step {
+            padding: 30px 22px;
+
+            background: white;
+
+            border: 1px solid #e5eaf2;
+
+            border-radius: 15px;
+
+            text-align: center;
+
+            transition: 0.3s;
+        }
+
+        .step:hover {
+            transform: translateY(-7px);
+
+            box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+        }
+
+        .step-number {
+            width: 55px;
+            height: 55px;
+
+            margin: 0 auto 20px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+             background: linear-gradient(135deg,
+                    #223866,
+                    #1e40af);
+            color: white;
+
+            border-radius: 50%;
+
+            font-weight: 800;
+        }
+
+        .step p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+
+        /* CTA  */
+
+        .cta {
+            width: 90%;
+            max-width: 1200px;
+
+            margin: 70px auto;
+
+            padding: 55px;
+
+            border-radius: 20px;
+
+            background: linear-gradient(135deg,
+                    #223866,
+                    #1e40af);
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 30px;
+        }
+
+        .cta h2 {
+            font-size: 32px;
+        }
+
+        .cta p {
+            color: #dbeafe;
+        }
+
+        .cta .primary-btn {
+            background: white;
+            color: #2563eb;
+        }
+
+
+        /* CONTACT  */
+
+        .contact-container {
+            display: grid;
+
+            grid-template-columns: 0.8fr 1.2fr;
+
+            gap: 50px;
+        }
+
+        .contact-info h3 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .contact-info p {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .contact-item {
+            margin: 18px 0;
+            font-weight: 600;
+        }
+
+        .contact-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+
+            padding: 15px;
+
+            border: 1px solid #dbe2ec;
+
+            border-radius: 8px;
+
+            outline: none;
+
+            font-family: inherit;
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            border-color: #2563eb;
+        }
+
+        .contact-form button {
+            border: none;
+            cursor: pointer;
+        }
+
+
+        /* FOOTER  */
+
+        footer {
+            background: #111827;
+            color: white;
+
+            padding: 50px 5% 20px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+
+            margin: auto;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 40px;
+        }
+
+        .footer-container h3 {
+            color: #60a5fa;
+            margin-bottom: 10px;
+        }
+
+        .footer-container p {
+            color: #9ca3af;
+            max-width: 350px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .footer-links a {
+            color: #d1d5db;
+        }
+
+        .footer-links a:hover {
+            color: #60a5fa;
+        }
+
+        .copyright {
+            text-align: center;
+
+            border-top: 1px solid #374151;
+
+            margin-top: 40px;
+            padding-top: 20px;
+
+            color: #9ca3af;
+        }
+
+
+        /* ==================================================
+           LOGIN POPUP
+           IMPORTANT PART ========================= */
+
+        .login-menu {
+            position: fixed;
+
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100vh;
+
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+
+            z-index: 9999;
+
+            /* Hidden by default */
+            opacity: 0;
+            visibility: hidden;
+
+            transition: 0.3s;
+        }
+
+
+        /* When JS adds is-open */
+
+        .login-menu.is-open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+
+        /* LOGIN CARD */
+
+        .login-card {
+            position: relative;
+            width: min(100%, 480px);
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+            background: var(--surface, #fff);
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            border-radius: 20px;
+            box-shadow: 0 22px 55px rgba(36, 75, 108, 0.16);
+            transform: scale(0.96);
+            transition: transform 0.35s ease;
+        }
+
+
+        .login-menu.is-open .login-card {
+            transform: translateY(0) scale(1);
+        }
+
+
+        /* CLOSE BUTTON */
+
+        .close {
+            position: absolute;
+
+            top: 15px;
+            right: 20px;
+
+            width: 35px;
+            height: 35px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #f1f5f9;
+
+            color: #334155;
+
+            font-size: 25px;
+
+            cursor: pointer;
+
+            transition: 0.3s;
+        }
+
+        .close:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+
+        .welcome-message h2 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .welcome-message p {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+
+        .login-credential label {
+            display: block;
+
+            font-weight: 600;
+
+            margin: 15px 0 7px;
+        }
+
+        .login-credential input {
+            width: 100%;
+
+            padding: 13px;
+
+            border: 1px solid #dbe2ec;
+
+            border-radius: 8px;
+
+            outline: none;
+
+            font-size: 15px;
+        }
+
+        .login-credential input:focus {
+            border-color: #2563eb;
+
+            box-shadow: 0 0 0 3px #eaf2ff;
+        }
+
+
+        .forget-password {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            margin: 18px 0;
+
+            font-size: 14px;
+        }
+
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .forget-password a {
+            color: #2563eb;
+        }
+
+
+        .login-button {
+            width: 100%;
+
+            padding: 14px;
+
+            border: none;
+
+            background: #2563eb;
+
+            color: white;
+
+            border-radius: 8px;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition: 0.3s;
+        }
+
+        .login-button:hover {
+            background: #1d4ed8;
+        }
+
+
+        /* MOBILE  */
+
+        .navbar-toggle {
+            display: none;
+
+            border: none;
+            background: transparent;
+
+            cursor: pointer;
+        }
+
+        .navbar-toggle .bar {
+            display: block;
+
+            width: 25px;
+            height: 3px;
+
+            margin: 5px;
+
+            background: #172033;
+
+            border-radius: 5px;
+        }
+
+
+        @media (max-width: 950px) {
+
+            .hero {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero p {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-image {
+                order: -1;
+            }
+
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .steps {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .contact-container {
+                grid-template-columns: 1fr;
+            }
+
+            .cta {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+
+        @media (max-width: 700px) {
+
+            .navbar-toggle {
+                display: block;
+            }
+
+            .navbar-manu {
+                position: absolute;
+
+                top: 75px;
+                left: 0;
+
+                width: 100%;
+
+                background: white;
+
+                display: none;
+
+                flex-direction: column;
+
+                padding: 25px;
+
+                gap: 20px;
+
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .navbar-manu.active {
+                display: flex;
+            }
+
+            .feature-grid,
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 42px;
+            }
+
+            .cta {
+                padding: 35px 25px;
+            }
+
+            .footer-container {
+                flex-direction: column;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+        }
+    </style>
+</head>
+
+
+<body>
+    <nav class="navbar">
+
+        <div class="navbar-container">
+
+            <a href="#home" class="navbar-logo">
+
+                <img src="logo.webp" alt="Logo">
+
+
+            </a>
+
+
+            <button class="navbar-toggle">
+
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+
+            </button>
+
+
+            <ul class="navbar-manu">
+
+                <li>
+                    <a href="#home">Home</a>
+                </li>
+
+                <li>
+                    <a href="#features">Features</a>
+                </li>
+
+                <li>
+                    <a href="#how-it-works">How It Works</a>
+                </li>
+
+                <li>
+                    <a href="#contact">Contact</a>
+                </li>
+
+                <li>
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================
+         HOME
+    ========================= -->
+
+    <section class="hero" id="home">
+
+        <div>
+
+            <div class="hero-badge">
+                🚀 Smart Workforce Management
+            </div>
+
+            <h1>
+                Employee Skills &
+                <span>Project Allocation</span>
+            </h1>
+
+            <p>
+                Seamlessly match employee expertise to project
+                requirements using intelligent skill mapping.
+                Find the right person for the right project.
+            </p>
+
+
+            <div class="hero-buttons">
+
+                <a href="#login" class="btn">
+                    Admin Login
+                </a>
+
+
+            </div>
+
+        </div>
+
+
+        <div class="hero-image">
+
+            <div class="floating-card card-one">
+                ✓ Skill Matched
+            </div>
+
+            <div class="floating-card card-two">
+                📊 95% Efficiency
+            </div>
+
+            <img src="1.png" alt="Employee Project Allocation">
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         FEATURES
+    ========================= -->
+
+    <section id="features">
+
+        <div class="section">
+
+            <div class="section-heading">
+
+                <span>FEATURES</span>
+
+                <h2>
+                    Powerful Tools for
+                    <strong>Better Management</strong>
+                </h2>
+
+                <p>
+                    Everything you need to manage employee
+                    skills and project allocation efficiently.
+                </p>
+
+            </div>
+
+
+            <div class="feature-grid">
+
+                <div class="feature-card">
+
+                    <div class="feature-icon">
+                        🎯
+                    </div>
+
+                    <h3>Precision Matching</h3>
+
+                    <p>
+                        Match employee expertise with project
+                        requirements quickly and accurately.
+                    </p>
+
+                    <a href="#">
+                        Learn More →
+                    </a>
+
+                </div>
+
+
+                <div class="feature-card">
+
+                    <div class="feature-icon">
+                        📈
+                    </div>
+
+                    <h3>Boost Productivity</h3>
+
+                    <p>
+                        Optimize resources and improve project
+                        productivity with smart allocation.
+                    </p>
+
+                    <a href="#">
+                        Learn More →
+                    </a>
+
+                </div>
+
+
+                <div class="feature-card">
+
+                    <div class="feature-icon">
+                        🔍
+                    </div>
+
+                    <h3>Identify Skill Gaps</h3>
+
+                    <p>
+                        Visualize your team's skills and identify
+                        areas that need improvement.
+                    </p>
+
+                    <a href="#">
+                        Learn More →
+                    </a>
+
+                </div>
+
+
+                <div class="feature-card">
+
+                    <div class="feature-icon">
+                        📊
+                    </div>
+
+                    <h3>Smart Analytics</h3>
+
+                    <p>
+                        Get valuable insights into employees,
+                        projects and resource utilization.
+                    </p>
+
+                    <a href="#">
+                        Learn More →
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         HOW IT WORKS
+    ========================= -->
+
+    <section class="how-section" id="how-it-works">
+
+        <div class="section">
+
+            <div class="section-heading">
+
+                <span>HOW IT WORKS</span>
+
+                <h2>
+                    Simple Process.
+                    <strong>Better Results.</strong>
+                </h2>
+
+                <p>
+                    Allocate the right employee to the right
+                    project in four simple steps.
+                </p>
+
+            </div>
+
+
+            <div class="steps">
+
+                <div class="step">
+
+                    <div class="step-number">
+                        01
+                    </div>
+
+                    <h3>Add Employees</h3>
+
+                    <p>
+                        Add employee information, skills,
+                        experience and expertise.
+                    </p>
+
+                </div>
+
+
+                <div class="step">
+
+                    <div class="step-number">
+                        02
+                    </div>
+
+                    <h3>Create Project</h3>
+
+                    <p>
+                        Define project requirements,
+                        technologies and required skills.
+                    </p>
+
+                </div>
+
+
+                <div class="step">
+
+                    <div class="step-number">
+                        03
+                    </div>
+
+                    <h3>Match Skills</h3>
+
+                    <p>
+                        Match employee skills with
+                        project requirements.
+                    </p>
+
+                </div>
+
+
+                <div class="step">
+
+                    <div class="step-number">
+                        04
+                    </div>
+
+                    <h3>Allocate</h3>
+
+                    <p>
+                        Assign the best employees and
+                        track project resources.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         CTA
+    ========================= -->
+
+    <section class="cta">
+
+        <div>
+
+            <h2>
+                Ready to Optimize Your Workforce?
+            </h2>
+
+            <p>
+                Start managing employee skills and projects
+                smarter today.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         CONTACT
+    ========================= -->
+
+    <section class="section" id="contact">
+
+        <div class="section-heading">
+
+            <span>CONTACT</span>
+
+            <h2>
+                Let's <strong>Connect</strong>
+            </h2>
+
+            <p>
+                Have questions? Get in touch with our team.
+            </p>
+
+        </div>
+
+
+        <div class="contact-container">
+
+            <div class="contact-info">
+
+                <h3>Get In Touch</h3>
+
+                <p>
+                    We are here to help you manage your
+                    workforce more effectively.
+                </p>
+
+                <div class="contact-item">
+                    📧 support@skillmatch.com
+                </div>
+
+                <div class="contact-item">
+                    📞 +91 98765 43210
+                </div>
+
+                <div class="contact-item">
+                    📍 India
+                </div>
+
+            </div>
+
+
+            <form class="contact-form">
+
+                <input type="text" placeholder="Your Name" required>
+
+                <input type="email" placeholder="Your Email" required>
+
+                <input type="text" placeholder="Subject" required>
+
+                <textarea rows="6" placeholder="Your Message" required>
+                </textarea>
+
+                <button type="submit" class="primary-btn">
+
+                    Send Message →
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </section>
+
+    <div class="login-menu" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+        <div class="login-card">
+            <button class="close" type="button" aria-label="Close login">&times;</button>
+
+            <div class="welcome-message">
+                <h2 id="loginTitle">Admin Login</h2>
+                <p>Sign in to manage employees and projects.</p>
+            </div>
+
+            <div class="login-credential">
+                <label for="email">Email</label>
+                <input id="email" type="email" autocomplete="username" placeholder="admin@example.com">
+
+                <label for="password">Password</label>
+                <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password">
+            </div>
+
+            <div class="forget-password">
+                <label class="remember">
+                    <input type="checkbox">
+                    Remember me
+                </label>
+            </div>
+
+            <button id="loginButton" class="login-button" type="button">Log In</button>
+        </div>
+    </div>
+
+    <!-- =========================
+         FOOTER
+    ========================= -->
+
+    <footer>
+
+
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================= -->
+
+    <script>
+
+        /* LOGIN POPUP  */
+
+        const adminLogin =
+            document.querySelector(".btn");
+
+        const loginMenu =
+            document.querySelector(".login-menu");
+
+        const closeLogin =
+            document.querySelector(".close");
+
+        const loginButton =
+            document.querySelector("#loginButton");
+
+        const email =
+            document.querySelector("#email");
+
+        const password =
+            document.querySelector("#password");
+
+
+        /* OPEN LOGIN */
+
+        adminLogin.addEventListener("click", function (event) {
+
+            event.preventDefault();
+
+            loginMenu.classList.add("is-open");
+
+            document.body.style.overflow = "hidden";
+
+        });
+
+
+        /* CLOSE LOGIN */
+
+        closeLogin.addEventListener("click", function (event) {
+
+            event.preventDefault();
+
+            loginMenu.classList.remove("is-open");
+
+            document.body.style.overflow = "auto";
+
+        });
+
+
+        /* CLOSE WHEN CLICK OUTSIDE */
+
+        loginMenu.addEventListener("click", function (event) {
+
+            if (event.target === loginMenu) {
+
+                loginMenu.classList.remove("is-open");
+
+                document.body.style.overflow = "auto";
+
+            }
+
+        });
+
+
+        /* LOGIN */
+
+        loginButton.addEventListener("click", function () {
+
+            const emailValue =
+                email.value.trim();
+
+            const passwordValue =
+                password.value.trim();
+
+
+            if (
+                emailValue === "" ||
+                passwordValue === ""
+            ) {
+
+                alert(
+                    "Please enter email and password."
+                );
+
+                return;
+            }
+
+
+            /* TEMPORARY LOGIN */
+
+            if (
+                emailValue === "admin@gmail.com" &&
+                passwordValue === "admin123"
+            ) {
+
+                window.location.href =
+                    "dashboard.html";
+
+            } else {
+
+                alert(
+                    "Invalid email or password."
+                );
+
+            }
+
+        });
+
+
+        /* MOBILE NAVBAR  */
+
+        const navbarToggle =
+            document.querySelector(".navbar-toggle");
+
+        const navbarMenu =
+            document.querySelector(".navbar-manu");
+
+
+        navbarToggle.addEventListener("click", function () {
+
+            const isOpen =
+                navbarToggle.classList.toggle("active");
+
+            navbarMenu.classList.toggle(
+                "active",
+                isOpen
+            );
+
+            navbarToggle.setAttribute(
+                "aria-expanded",
+                String(isOpen)
+            );
+
+        });
+
+
+        /* CLOSE MOBILE MENU AFTER CLICK */
+
+        document.querySelectorAll(".navbar-manu a")
+            .forEach(function (link) {
+
+                link.addEventListener("click", function () {
+
+                    navbarMenu.classList.remove("active");
+
+                    navbarToggle.classList.remove("active");
+
+                    navbarToggle.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+
+                });
+
+            });
+
+    </script>
+
+</body>
+
+</html>
+```

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillAssign - Add Employee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="module-pages.css">
+  <style>
+    .sidebar-bottom {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+}
+
+.goal-card {
+  position: relative;
+  min-height: 125px;
+  margin-top: 10px;
+  padding: 16px 14px;
+  overflow: hidden;
+  border: 1px solid rgba(100, 111, 255, .22);
+  border-radius: 9px;
+  background: linear-gradient(145deg, rgba(28, 25, 89, .85), rgba(12, 30, 72, .95));
+  color: #eef1ff;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.goal-icon {
+  color: #c85aff;
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.goal-glow {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  right: -35px;
+  bottom: -50px;
+  border-radius: 50%;
+  background: #5725dc;
+  filter: blur(30px);
+}
+
+    .form-panel {
+      max-width: 760px;
+      padding: 24px;
+    }
+    .employee-form {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .full-width {
+      grid-column: 1 / -1;
+    }
+    .form-field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .form-field input,
+    .form-field select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      outline: 0;
+      color: var(--text);
+      background: rgba(255, 255, 255, .04);
+      font-size: 13px;
+    }
+    .form-field input:focus,
+    .form-field select:focus {
+      border-color: var(--purple);
+    }
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .back-btn {
+      padding: 11px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .secondary-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, .05);
+    }
+    @media (max-width: 650px) {
+      .employee-form {
+        grid-template-columns: 1fr;
+      }
+      .form-field.full-width {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-logo">✦</div><span>Talent Optima</span></div>
+      <nav class="nav">
+        <button class="nav-item" data-page="Dashboard"><span class="nav-icon">⌂</span><span>Dashboard</span></button>
+        <button class="nav-item active" data-page="Employees"><span class="nav-icon">♧</span><span>Employees</span></button>
+        <button class="nav-item" data-page="Projects"><span class="nav-icon">▣</span><span>Projects</span></button>
+        <button class="nav-item" data-page="Assignments"><span class="nav-icon">♙</span><span>Assignments</span></button>
+        <button class="nav-item" data-page="Reports"><span class="nav-icon">▤</span><span>Reports</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="goal-card">
+          <div class="goal-icon">◎</div>
+          <strong>Better Skills<br>Better Teams<br>Bigger Goals</strong>
+          <div class="goal-glow"></div>
+        </div>
+      </div>
+      
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="search-box"><span>⌕</span><input type="search" placeholder="Search employees..."></div>
+        <div class="admin"><div class="avatar">A</div><span>Admin</span></div>
+      </header>
+      <a class="back-btn" href="employee.html">← Back to Employees</a>
+      <div class="content">
+        <div class="page-heading">
+          <div><h1 id="formTitle">Add Employee</h1><p id="formDescription">Add a new team member to your employee directory.</p></div>
+          
+        </div>
+        
+        <section class="panel form-panel">
+          <form class="employee-form" id="employeeForm">
+            <div class="form-field">
+              <label for="employeeName">Full name</label>
+              <input id="employeeName" name="name" type="text" placeholder="Enter full name" required>
+            </div>
+            <div class="form-field">
+              <label for="employeeId">Employee ID</label>
+              <input id="employeeId" name="id" type="text" placeholder="e.g. EMP-006" required>
+            </div>
+            <div class="form-field">
+              <label for="employeeRole">Role</label>
+              <input id="employeeRole" name="role" type="text" placeholder="e.g. Product Designer" required>
+            </div>
+            <div class="form-field">
+              <label for="employeeStatus">Status</label>
+              <select id="employeeStatus" name="status">
+                <option>Available</option>
+                <option>Allocated</option>
+                <option>Bench</option>
+              </select>
+            </div>
+            <div class="form-field full-width">
+              <label for="employeeSkills">Skills</label>
+              <input id="employeeSkills" name="skills" type="text" placeholder="e.g. Figma, UX Research, Prototyping" required>
+            </div>
+            <div class="form-actions full-width">
+              <button class="primary-btn" id="submitButton" type="submit">Add Employee</button>
+              <a class="secondary-btn" href="employee.html">Cancel</a>
+            </div>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="navigation.js"></script>
+  <script src="employee-data.js"></script>
+  <script>
+    const employeeForm = document.getElementById("employeeForm");
+    const editingId = new URLSearchParams(window.location.search).get("id");
+    let employeeBeingEdited = null;
+
+    if (editingId) {
+      try {
+        employeeBeingEdited = SkillAssignEmployeeStore.getAll().find(employee => employee.id === editingId);
+        if (!employeeBeingEdited) throw new Error("The employee you selected no longer exists.");
+
+        employeeForm.elements.id.value = employeeBeingEdited.id;
+        employeeForm.elements.id.readOnly = true;
+        employeeForm.elements.name.value = employeeBeingEdited.name;
+        employeeForm.elements.role.value = employeeBeingEdited.role;
+        employeeForm.elements.status.value = employeeBeingEdited.status || "Available";
+        employeeForm.elements.skills.value = (employeeBeingEdited.skills || []).join(", ");
+        document.getElementById("formTitle").textContent = "Edit Employee";
+        document.getElementById("formDescription").textContent = "Update this team member's information.";
+        document.getElementById("submitButton").textContent = "Save Changes";
+        document.title = "SkillAssign - Edit Employee";
+      } catch (error) {
+        alert(`Unable to load employee: ${error.message}`);
+        window.location.href = "employee.html";
+      }
+    }
+
+    employeeForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const employee = {
+        id: form.elements.id.value.trim(),
+        name: form.elements.name.value.trim(),
+        role: form.elements.role.value.trim(),
+        status: form.elements.status.value,
+        skills: form.elements.skills.value.split(",").map(skill => skill.trim()).filter(Boolean)
+      };
+
+      try {
+        const employees = SkillAssignEmployeeStore.getAll();
+        if (employeeBeingEdited) {
+          const employeeIndex = employees.findIndex(existing => existing.id === employeeBeingEdited.id);
+          if (employeeIndex < 0) throw new Error("The employee you are editing no longer exists.");
+          employees[employeeIndex] = { ...employees[employeeIndex], ...employee };
+          SkillAssignEmployeeStore.save(employees);
+          alert("Employee updated successfully.");
+        } else if (employees.some(existing => existing.id.toLowerCase() === employee.id.toLowerCase())) {
+          form.elements.id.setCustomValidity("This employee ID is already in use.");
+          form.elements.id.reportValidity();
+          form.elements.id.addEventListener("input", () => form.elements.id.setCustomValidity(""), { once: true });
+          return;
+        } else {
+          SkillAssignEmployeeStore.save([...employees, employee]);
+          alert("Employee added successfully.");
+        }
+        window.location.href = "employee.html";
+      } catch (error) {
+        alert(`Unable to save employee: ${error.message}`);
+      }
+    });
+  </script>
+</body>
+</html>

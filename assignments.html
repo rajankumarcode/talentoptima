@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillAssign - Assignments</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="module-pages.css">
+  <style>
+    .assignment-modal, .assignment-details { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(3,7,18,.76); backdrop-filter: blur(5px); }
+    .assignment-modal[hidden], .assignment-details[hidden] { display: none; }
+    .assignment-dialog { width: min(560px,100%); max-height: 90vh; overflow-y: auto; padding: 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: 0 24px 80px rgba(0,0,0,.45); }
+    .assignment-dialog.details { width: min(620px,100%); }
+    .assignment-heading { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+    .assignment-heading h2 { font-size: 19px; }
+    .assignment-heading p { margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .assignment-close { color: var(--muted); background: transparent; font-size: 23px; }
+    .assignment-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 15px; }
+    .assignment-field { display: flex; flex-direction: column; gap: 7px; }
+    .assignment-field.full, .assignment-actions { grid-column: 1 / -1; }
+    .assignment-field label { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .assignment-field input, .assignment-field select { min-height: 40px; padding: 10px 11px; border: 1px solid var(--border); border-radius: 8px; outline: 0; color: var(--text); background: #111a2b; font-size: 13px; caret-color: auto; }
+    .assignment-field input:focus, .assignment-field select:focus { border-color: var(--purple); }
+    .assignment-field select option { color: var(--text); background: var(--card); }
+    .assignment-field input[readonly] { color: var(--cyan); }
+    .employee-picker { display: grid; gap: 8px; max-height: 210px; overflow-y: auto; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,.025); }
+    .employee-choice { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 8px; border-radius: 7px; color: #e2e8f0; font-size: 12px; }
+    .employee-choice:hover { background: rgba(255,255,255,.04); }
+    .employee-choice input { width: 16px; min-height: auto; accent-color: var(--purple); }
+    .employee-choice small { color: var(--muted); font-size: 10px; }
+    .selected-employee-card { display: grid; grid-template-columns: minmax(0,1fr) repeat(3,minmax(100px,.45fr)); gap: 10px; align-items: end; padding: 12px; border: 1px solid var(--border); border-radius: 9px; background: rgba(255,255,255,.025); }
+    .selected-employee-info { min-width: 0; align-self: center; }
+    .selected-employee-info strong { display: block; font-size: 12px; }
+    .selected-employee-info .list-meta { overflow-wrap: anywhere; }
+    .selected-employee-info .assignment-skill-tags { margin-top: 6px; }
+    .selected-employee-card .assignment-field label { font-size: 10px; }
+    .selected-employee-card .assignment-field select, .selected-employee-card .assignment-field input { min-width: 0; padding: 8px; font-size: 11px; }
+    .selected-employee-list { display: grid; gap: 9px; }
+    .selected-employee-remove { justify-self: end; padding: 6px 9px; border: 1px solid var(--border); border-radius: 7px; color: var(--red); background: transparent; font-size: 10px; }
+    .selected-employee-remove:hover { background: rgba(248,113,113,.08); }
+    .assignment-project-summary { grid-column: 1 / -1; display: grid; gap: 6px; padding: 11px 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,.025); }
+    .assignment-project-summary strong { font-size: 13px; }
+    .assignment-project-summary span { color: var(--muted); font-size: 11px; }
+    .assignment-info { min-height: 17px; color: var(--muted); font-size: 11px; }
+    .assignment-info.warning { color: var(--orange); }
+    .assignment-info.success { color: var(--green); }
+    .assignment-skill-tags { display: flex; flex-wrap: wrap; gap: 5px; min-height: 28px; }
+    .assignment-skill-tags .skill-tag { display: inline-flex; }
+    .assignment-error { grid-column: 1 / -1; color: var(--red); font-size: 12px; }
+    .assignment-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 5px; }
+    .assignment-cancel { padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); background: transparent; }
+    .assignment-cancel:hover { color: var(--text); background: rgba(255,255,255,.05); }
+    .assignment-close { color: var(--muted); background: transparent; font-size: 23px; }
+    .assignment-row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+    .assignment-row-actions button, .assignment-row-actions select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 7px; color: var(--muted); background: rgba(255,255,255,.04); font-size: 10px; }
+    .assignment-row-actions button:hover { color: var(--text); }
+    .assignment-row-actions .cancel-action { color: var(--red); }
+    .assignment-row-actions select option { color: var(--text); background: var(--card); }
+    .assignment-notice { position: fixed; right: 24px; bottom: 24px; z-index: 30; max-width: min(400px,calc(100vw - 32px)); padding: 13px 16px; border: 1px solid rgba(52,211,153,.3); border-radius: 9px; color: var(--green); background: var(--card); box-shadow: 0 12px 35px rgba(0,0,0,.3); font-size: 13px; }
+    .assignment-notice[hidden] { display: none; }
+    .assignment-notice.error { color: var(--red); border-color: rgba(248,113,113,.35); }
+    .detail-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+    .detail-label { color: var(--muted); font-size: 11px; }
+    .detail-value { margin-top: 5px; overflow-wrap: anywhere; font-size: 13px; }
+    @media (max-width: 760px) { .selected-employee-card { grid-template-columns: repeat(2,minmax(0,1fr)); } .selected-employee-info { grid-column: 1 / -1; } }
+    @media (max-width: 650px) { .assignment-form { grid-template-columns: 1fr; } .assignment-field.full, .assignment-actions { grid-column: auto; } .selected-employee-card { grid-template-columns: 1fr; } .selected-employee-info { grid-column: auto; } }
+  </style>
+</head>
+<body><div class="app"><aside class="sidebar"><div class="brand"><div class="brand-logo">✦</div><span>Talent Optima</span></div><nav class="nav">
+  <button class="nav-item" data-page="Dashboard"><span class="nav-icon">⌂</span><span>Dashboard</span></button><button class="nav-item" data-page="Employees"><span class="nav-icon">♧</span><span>Employees</span></button><button class="nav-item" data-page="Projects"><span class="nav-icon">▣</span><span>Projects</span></button><button class="nav-item active" data-page="Assignments"><span class="nav-icon">♙</span><span>Assignments</span></button><button class="nav-item" data-page="Reports"><span class="nav-icon">▤</span><span>Reports</span></button>
+</nav><div class="sidebar-bottom"><div class="goal-card"><div class="goal-icon">◎</div><strong>Better Skills<br>Better Teams<br>Bigger Goals</strong><div class="goal-glow"></div></div></div></aside><main class="main"><header class="topbar"><div class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search assignments..."></div><div class="admin"><div class="avatar">A</div><span>Admin</span></div></header><div class="content">
+  <div class="page-heading"><div><h1>Assignments</h1><p>Match people with the projects where they can make the biggest impact.</p></div><button class="primary-btn" id="newAssignment">＋ New Assignment</button></div>
+  <section class="stats-grid"><div class="stat-card"><div class="stat-label">Total Assignments</div><div class="stat-value" id="totalAssignments">0</div><div class="stat-note">Saved records</div></div><div class="stat-card"><div class="stat-label">Active</div><div class="stat-value" id="activeAssignments">0</div><div class="stat-note">Current allocations</div></div><div class="stat-card"><div class="stat-label">Available Staff</div><div class="stat-value" id="availableStaff">0</div><div class="stat-note">With remaining capacity</div></div><div class="stat-card"><div class="stat-label">Pending Review</div><div class="stat-value" id="pendingAssignments">0</div><div class="stat-note" style="color:var(--orange)">Awaiting approval</div></div></section>
+  <section class="panel"><div class="panel-heading"><div><h2>Resource Allocation</h2><p>Employees assigned to current projects</p></div><div class="filters"><select class="filter" id="assignmentProjectFilter"><option value="">All Projects</option></select><select class="filter" id="assignmentStatusFilter"><option value="">All Statuses</option><option>Pending</option><option>Active</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Role</th><th>Project</th><th>Start Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="assignmentRows"></tbody></table></div></section>
+</div></main></div>
+<div class="assignment-modal" id="assignmentModal" hidden>
+  <section class="assignment-dialog" role="dialog" aria-modal="true" aria-labelledby="assignmentTitle">
+    <div class="assignment-heading"><div><h2 id="assignmentTitle">New Assignment</h2><p>Assign one or more employees to a saved project.</p></div><button class="assignment-close" type="button" data-close-assignment aria-label="Close dialog">×</button></div>
+    <form class="assignment-form" id="assignmentForm" novalidate>
+      <div class="assignment-field"><label for="assignmentId">First Assignment ID</label><input id="assignmentId" name="id" readonly></div>
+      <div class="assignment-field"><label for="assignmentProject">Select Project *</label><select id="assignmentProject" name="projectId" required><option value="">Select a project</option></select></div>
+      <div class="assignment-project-summary" id="assignmentProjectSummary"><strong>Select a project</strong><span>Project leader details will appear here.</span></div>
+      <div class="assignment-field full"><label for="employeeSearch">Select Employees * <span>(choose multiple)</span></label><input id="employeeSearch" type="search" placeholder="Search employees by name, ID, or role"><div class="employee-picker" id="employeePicker"><span class="assignment-info">Select a project to see available employees.</span></div><div class="assignment-info">Check each employee you want to assign; you can select multiple people for this project.</div><div class="assignment-info" id="employeeSuggestion">Employees are ranked by skill match to the selected project.</div></div>
+      <div class="assignment-field full"><label>Selected Employees &amp; Individual Assignments</label><div class="selected-employee-list" id="selectedEmployees"><span class="assignment-info">No employees selected.</span></div></div>
+      <div class="assignment-field full"><label>Required Project Skills</label><div class="assignment-skill-tags" id="projectSkillsDisplay">—</div></div>
+      <div class="assignment-field full"><label>Skill Match</label><div class="assignment-info" id="skillMatchDisplay">Select employees to compare skills.</div></div>
+      <div class="assignment-field full"><label for="assignmentEnd">End Date</label><input id="assignmentEnd" name="endDate" type="date"></div>
+      <div class="assignment-error" id="assignmentError" role="alert"></div>
+      <div class="assignment-actions"><button class="assignment-cancel" type="button" data-close-assignment>Cancel</button><button class="primary-btn" type="submit">Assign Employees</button></div>
+    </form>
+  </section>
+</div>
+<div class="assignment-details" id="assignmentDetails" hidden>
+  <section class="assignment-dialog details" role="dialog" aria-modal="true" aria-labelledby="assignmentDetailsTitle">
+    <div class="assignment-heading"><div><h2 id="assignmentDetailsTitle">Assignment details</h2><p id="assignmentDetailsSubtitle"></p></div><button class="assignment-close" type="button" data-close-details aria-label="Close dialog">×</button></div>
+    <div class="detail-grid" id="assignmentDetailsContent"></div>
+    <div class="assignment-actions"><button class="assignment-cancel" type="button" data-close-details>Close</button></div>
+  </section>
+</div>
+<div class="assignment-notice" id="assignmentNotice" role="status" hidden></div>
+<script src="navigation.js"></script><script src="employee-data.js"></script><script>
+  (() => {
+    const projectKey = "skillAssignProjects";
+    const assignmentKey = "skillAssignAssignments";
+    const employeesKey = "skillAssignEmployees";
+    const rows = document.getElementById("assignmentRows");
+    const search = document.getElementById("searchInput");
+    const projectFilter = document.getElementById("assignmentProjectFilter");
+    const statusFilter = document.getElementById("assignmentStatusFilter");
+    const assignmentModal = document.getElementById("assignmentModal");
+    const detailsModal = document.getElementById("assignmentDetails");
+    const assignmentForm = document.getElementById("assignmentForm");
+    const assignmentProject = document.getElementById("assignmentProject");
+    const employeePicker = document.getElementById("employeePicker");
+    const employeeSearch = document.getElementById("employeeSearch");
+    const notice = document.getElementById("assignmentNotice");
+    let projects = [];
+    let assignments = [];
+    let employees = [];
+    let editingId = null;
+    let selectedEmployeeIds = new Set();
+    let selectedAssignmentDetails = new Map();
+    let noticeTimer;
+
+    const element = id => document.getElementById(id);
+    const isActive = assignment => assignment.status === "Active";
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+
+    function readArray(key, label) {
+      const saved = localStorage.getItem(key);
+      if (saved === null) return [];
+      const records = JSON.parse(saved);
+      if (!Array.isArray(records)) throw new Error(`Saved ${label} data is invalid.`);
+      return records;
+    }
+
+    function refreshData() {
+      projects = readArray(projectKey, "project");
+      const savedAssignments = readArray(assignmentKey, "assignment");
+      employees = SkillAssignEmployeeStore.getAll();
+      if (projects.some(project => !project || !project.id || !project.name) ||
+          employees.some(employee => !employee || !employee.id || !employee.name) ||
+          savedAssignments.some(assignment => !assignment || typeof assignment !== "object")) {
+        throw new Error("Saved employee, project, or assignment data contains invalid records.");
+      }
+      const usedIds = new Set(savedAssignments.map(assignment => assignment.id).filter(Boolean));
+      let sequence = 1;
+      assignments = savedAssignments.map(assignment => {
+        let id = assignment.id;
+        if (!id) {
+          while (usedIds.has(`ASN-${String(sequence).padStart(3, "0")}`)) sequence += 1;
+          id = `ASN-${String(sequence).padStart(3, "0")}`;
+          usedIds.add(id);
+          sequence += 1;
+        }
+        return {
+          ...assignment,
+          id,
+          allocation: Number(assignment.allocation),
+          status: assignment.status || "Pending",
+          endDate: assignment.endDate || ""
+        };
+      });
+      if (new Set(assignments.map(assignment => assignment.id)).size !== assignments.length) {
+        throw new Error("Assignment IDs must be unique.");
+      }
+      if (assignments.some(assignment =>
+        !assignment.id || !employees.some(employee => employee.id === assignment.employeeId) ||
+        !projects.some(project => project.id === assignment.projectId) ||
+        !Number.isFinite(assignment.allocation) || assignment.allocation <= 0 ||
+        !["Pending", "Active", "Completed", "Cancelled"].includes(assignment.status)
+      )) {
+        throw new Error("An assignment has invalid employee, project, allocation, or status data.");
+      }
+      const activeByEmployee = new Map();
+      const activePairs = new Set();
+      assignments.filter(isActive).forEach(assignment => {
+        const total = (activeByEmployee.get(assignment.employeeId) || 0) + assignment.allocation;
+        if (total > 100) throw new Error(`Employee ${assignment.employeeId} has more than 100% active allocation.`);
+        activeByEmployee.set(assignment.employeeId, total);
+        const pair = `${assignment.employeeId}\u0000${assignment.projectId}`;
+        if (activePairs.has(pair)) throw new Error(`Employee ${assignment.employeeId} has duplicate active assignments to one project.`);
+        activePairs.add(pair);
+      });
+      renderProjectOptions();
+      updateEmployeeAvailability();
+      render();
+    }
+
+    function nextId(records = assignments) {
+      const used = new Set(records.map(record => record.id));
+      let sequence = 1;
+      while (used.has(`ASN-${String(sequence).padStart(3, "0")}`)) sequence += 1;
+      return `ASN-${String(sequence).padStart(3, "0")}`;
+    }
+
+    function persistAssignments(nextAssignments) {
+      const previousAssignments = assignments;
+      const previousEmployees = employees;
+      const previousAssignmentsStorage = localStorage.getItem(assignmentKey);
+      const previousEmployeesStorage = localStorage.getItem(employeesKey);
+      try {
+        localStorage.setItem(assignmentKey, JSON.stringify(nextAssignments));
+        assignments = nextAssignments;
+        updateEmployeeAvailability();
+        render();
+      } catch (error) {
+        assignments = previousAssignments;
+        employees = previousEmployees;
+        try {
+          if (previousAssignmentsStorage === null) localStorage.removeItem(assignmentKey);
+          else localStorage.setItem(assignmentKey, previousAssignmentsStorage);
+          if (previousEmployeesStorage === null) localStorage.removeItem(employeesKey);
+          else localStorage.setItem(employeesKey, previousEmployeesStorage);
+        } catch (restoreError) {
+          throw new Error(`${error.message} Storage rollback also failed: ${restoreError.message}`);
+        }
+        throw error;
+      }
+    }
+
+    function activeAllocation(employeeId, exceptId = null) {
+      return assignments.reduce((total, assignment) =>
+        assignment.employeeId === employeeId && assignment.id !== exceptId && isActive(assignment)
+          ? total + Number(assignment.allocation || 0)
+          : total, 0);
+    }
+
+    function availableWorkload(employeeId, exceptId = null) {
+      return Math.max(0, 100 - activeAllocation(employeeId, exceptId));
+    }
+
+    function updateEmployeeAvailability() {
+      employees = SkillAssignEmployeeStore.syncWorkloads(assignments);
+    }
+
+    function renderProjectOptions(selected = "") {
+      const oldFilterValue = projectFilter.value;
+      projectFilter.innerHTML = '<option value="">All Projects</option>' +
+        projects.map(project => `<option value="${escapeHtml(project.id)}">${escapeHtml(project.name)}</option>`).join("");
+      projectFilter.value = projects.some(project => project.id === oldFilterValue) ? oldFilterValue : "";
+      assignmentProject.innerHTML = '<option value="">Select a project</option>' +
+        projects.map(project => `<option value="${escapeHtml(project.id)}">${escapeHtml(project.name)}</option>`).join("");
+      if (selected) assignmentProject.value = selected;
+    }
+
+    function skillMatch(employee, project) {
+      const required = Array.isArray(project?.skills) ? project.skills : [];
+      if (!required.length) return { percent: 100, matched: [], required };
+      const skillSet = new Set((employee?.skills || []).map(skill => String(skill).trim().toLowerCase()));
+      const matched = required.filter(skill => skillSet.has(String(skill).trim().toLowerCase()));
+      return { percent: Math.round(matched.length / required.length * 100), matched, required };
+    }
+
+    function renderTags(container, values) {
+      container.innerHTML = values.length
+        ? values.map(value => `<span class="skill-tag">${escapeHtml(value)}</span>`).join("")
+        : '<span class="assignment-info">None specified</span>';
+    }
+
+    function readSelectedAssignmentDetails() {
+      document.querySelectorAll(".selected-employee-card").forEach(card => {
+        const employeeId = card.dataset.employeeId;
+        selectedAssignmentDetails.set(employeeId, {
+          allocation: card.querySelector('[data-field="allocation"]').value,
+          startDate: card.querySelector('[data-field="startDate"]').value,
+          status: card.querySelector('[data-field="status"]').value
+        });
+      });
+    }
+
+    function setEmployeeOptions() {
+      const project = projects.find(item => item.id === assignmentProject.value);
+      const choices = employees.map(employee => ({
+        employee,
+        match: skillMatch(employee, project).percent,
+        remaining: availableWorkload(employee.id, editingId)
+      })).filter(choice => choice.remaining > 0 || selectedEmployeeIds.has(choice.employee.id))
+        .sort((first, second) => second.match - first.match || second.remaining - first.remaining || first.employee.name.localeCompare(second.employee.name));
+      const suggested = choices.filter(choice => choice.match > 0).slice(0, 3).map(choice => `${choice.employee.name} (${choice.match}%)`);
+      element("employeeSuggestion").textContent = !project
+        ? "Select a project to see suggested employees."
+        : !project.skills?.length
+          ? "No required skills; employees are ordered by available workload."
+          : suggested.length ? `Best skill matches: ${suggested.join(", ")}` : "No employee currently matches the required skills.";
+      const query = employeeSearch.value.trim().toLowerCase();
+      const visibleChoices = choices.filter(({ employee }) =>
+        `${employee.name} ${employee.id} ${employee.role || ""} ${(employee.skills || []).join(" ")}`.toLowerCase().includes(query)
+      );
+      employeePicker.innerHTML = !project
+        ? '<span class="assignment-info">Select a project to see available employees.</span>'
+        : visibleChoices.length ? visibleChoices.map(({ employee, match, remaining }) =>
+        `<label class="employee-choice"><input type="checkbox" value="${escapeHtml(employee.id)}"${selectedEmployeeIds.has(employee.id) ? " checked" : ""}>
+          <span><strong>${escapeHtml(employee.name)}</strong><br><small>${escapeHtml(employee.id)} · ${escapeHtml(employee.role || "Role not specified")}</small></span>
+          <small>${project?.skills?.length ? `${match}% match · ` : ""}${remaining}% available</small></label>`
+      ).join("") : '<span class="assignment-info">No employees match this search.</span>';
+      renderSelectedEmployees();
+      const leader = employees.find(employee => employee.id === project?.projectLeaderId);
+      const leaderName = leader?.name || project?.projectLeaderName || "No project leader selected";
+      const leaderId = leader?.id || project?.projectLeaderId;
+      element("assignmentProjectSummary").innerHTML = project
+        ? `<strong>${escapeHtml(project.name)} · ${escapeHtml(project.id)}</strong><span>Project Leader: ${escapeHtml(leaderId ? `${leaderName} (${leaderId})` : leaderName)}</span>`
+        : "<strong>Select a project</strong><span>Project leader details will appear here.</span>";
+      renderTags(element("projectSkillsDisplay"), project?.skills || []);
+      const selectedMatches = [...selectedEmployeeIds].map(id => {
+        const employee = employees.find(item => item.id === id);
+        const result = skillMatch(employee, project);
+        return employee ? `${employee.name}: ${result.percent}% (${result.matched.length}/${result.required.length} skills)` : "";
+      }).filter(Boolean);
+      const matchDisplay = element("skillMatchDisplay");
+      matchDisplay.textContent = selectedMatches.length
+        ? selectedMatches.join(" · ")
+        : "Select employees to compare skills.";
+      matchDisplay.className = `assignment-info ${selectedMatches.some(text => Number(text.match(/:\s*(\d+)%/)?.[1]) < 50) ? "warning" : "success"}`;
+    }
+
+    function renderSelectedEmployees() {
+      const container = element("selectedEmployees");
+      const project = projects.find(item => item.id === assignmentProject.value);
+      const selected = [...selectedEmployeeIds].map(id => employees.find(employee => employee.id === id)).filter(Boolean);
+      if (!selected.length) {
+        container.innerHTML = '<span class="assignment-info">No employees selected.</span>';
+        return;
+      }
+      container.innerHTML = selected.map(employee => {
+        const details = selectedAssignmentDetails.get(employee.id) || {};
+        const match = skillMatch(employee, project);
+        const allocation = [25, 50, 75, 100].includes(Number(details.allocation)) ? Number(details.allocation) : 25;
+        const statuses = editingId ? ["Pending", "Active", "Completed", "Cancelled"] : ["Pending", "Active"];
+        return `<div class="selected-employee-card" data-employee-id="${escapeHtml(employee.id)}">
+          <div class="selected-employee-info"><strong>${escapeHtml(employee.name)} · ${escapeHtml(employee.id)}</strong>
+            <div class="list-meta">${escapeHtml(employee.role || "Role not specified")} · ${availableWorkload(employee.id, editingId)}% available · ${match.percent}% skill match</div>
+            <div class="assignment-skill-tags">${(employee.skills || []).length ? employee.skills.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join("") : '<span class="assignment-info">No registered skills</span>'}</div>
+          </div>
+          <div class="assignment-field"><label>Allocation</label><select data-field="allocation">${[25, 50, 75, 100].map(value => `<option value="${value}"${value === allocation ? " selected" : ""}>${value}%</option>`).join("")}</select></div>
+          <div class="assignment-field"><label>Start Date *</label><input data-field="startDate" type="date" value="${escapeHtml(details.startDate || new Date().toISOString().slice(0, 10))}"></div>
+          <div class="assignment-field"><label>Status</label><select data-field="status">${statuses.map(status => `<option${status === (details.status || "Pending") ? " selected" : ""}>${status}</option>`).join("")}</select></div>
+          ${editingId ? "" : `<button class="selected-employee-remove" type="button" data-remove-employee="${escapeHtml(employee.id)}">Remove</button>`}
+        </div>`;
+      }).join("");
+    }
+
+    function badgeClass(status) {
+      if (status === "Active") return "green";
+      if (status === "Pending") return "orange";
+      if (status === "Completed") return "blue";
+      return "red";
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "—";
+      const date = new Date(`${dateString}T00:00:00`);
+      return Number.isNaN(date.getTime()) ? escapeHtml(dateString) : date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+    }
+
+    function render() {
+      const query = search.value.trim().toLowerCase();
+      const selectedProject = projectFilter.value;
+      const selectedStatus = statusFilter.value;
+      const employeesById = new Map(employees.map(employee => [employee.id, employee]));
+      const projectsById = new Map(projects.map(project => [project.id, project]));
+      const displayed = assignments.filter(assignment => {
+        const employee = employeesById.get(assignment.employeeId);
+        const project = projectsById.get(assignment.projectId);
+        if (!employee || !project) return false;
+        const matchesQuery = `${employee.name} ${employee.id} ${project.name} ${project.id}`.toLowerCase().includes(query);
+        return matchesQuery && (!selectedProject || assignment.projectId === selectedProject) &&
+          (!selectedStatus || assignment.status === selectedStatus);
+      });
+
+      rows.innerHTML = displayed.length ? displayed.map(assignment => {
+        const employee = employeesById.get(assignment.employeeId);
+        const project = projectsById.get(assignment.projectId);
+        return `<tr data-assignment-id="${escapeHtml(assignment.id)}">
+          <td><strong>${escapeHtml(employee.name)}</strong><div class="list-meta">${escapeHtml(employee.id)}</div></td>
+          <td>${escapeHtml(employee.role || "—")}</td>
+          <td>${escapeHtml(project.name)}</td>
+          <td>${escapeHtml(formatDate(assignment.startDate))}</td>
+          <td><span class="badge ${badgeClass(assignment.status)}">${escapeHtml(assignment.status)}</span></td>
+          <td><div class="assignment-row-actions">
+            <button type="button" data-action="view">View</button>
+            <button type="button" data-action="edit">Edit</button>
+            <select aria-label="Status for ${escapeHtml(assignment.id)}" data-status-select>
+              ${["Pending", "Active", "Completed", "Cancelled"].map(status => `<option${status === assignment.status ? " selected" : ""}>${status}</option>`).join("")}
+            </select>
+            <button type="button" data-action="update-status">Update</button>
+            ${assignment.status === "Completed" || assignment.status === "Cancelled" ? "" : '<button type="button" data-action="cancel" class="cancel-action">Cancel</button>'}
+            <button type="button" class="cancel-action" data-action="delete">Delete</button>
+          </div></td>
+        </tr>`;
+      }).join("") : `<tr><td colspan="6" style="padding:28px;text-align:center;color:var(--muted)">No assignments match the selected filters.</td></tr>`;
+
+      element("totalAssignments").textContent = assignments.length;
+      element("activeAssignments").textContent = assignments.filter(isActive).length;
+      element("pendingAssignments").textContent = assignments.filter(assignment => assignment.status === "Pending").length;
+      element("availableStaff").textContent = employees.filter(employee => availableWorkload(employee.id) > 0).length;
+    }
+
+    function showNotice(message, isError = false) {
+      clearTimeout(noticeTimer);
+      notice.textContent = message;
+      notice.classList.toggle("error", isError);
+      notice.hidden = false;
+      noticeTimer = setTimeout(() => { notice.hidden = true; }, 3500);
+    }
+
+    function openForm(assignment = null) {
+      assignmentForm.reset();
+      editingId = assignment?.id || null;
+      selectedEmployeeIds = new Set(assignment ? [assignment.employeeId] : []);
+      selectedAssignmentDetails = new Map(assignment ? [[assignment.employeeId, {
+        allocation: String(assignment.allocation),
+        startDate: assignment.startDate || new Date().toISOString().slice(0, 10),
+        status: assignment.status || "Pending"
+      }]] : []);
+      element("assignmentId").value = assignment?.id || nextId();
+      element("employeeSearch").value = "";
+      element("assignmentError").textContent = "";
+      element("assignmentTitle").textContent = assignment ? "Edit Assignment" : "New Assignment";
+      assignmentForm.querySelector('[type="submit"]').textContent = assignment ? "Save Changes" : "Assign Employees";
+      renderProjectOptions(assignment?.projectId || "");
+      element("assignmentEnd").value = assignment?.endDate || projects.find(project => project.id === assignment?.projectId)?.deadline || "";
+      setEmployeeOptions();
+      assignmentModal.hidden = false;
+      assignmentProject.focus();
+    }
+
+    function closeModal() { assignmentModal.hidden = true; }
+
+    function showDetails(id) {
+      const assignment = assignments.find(item => item.id === id);
+      if (!assignment) return;
+      const employee = employees.find(item => item.id === assignment.employeeId);
+      const project = projects.find(item => item.id === assignment.projectId);
+      if (!employee || !project) return;
+      const match = skillMatch(employee, project);
+      element("assignmentDetailsTitle").textContent = `${employee.name} → ${project.name}`;
+      element("assignmentDetailsSubtitle").textContent = assignment.id;
+      element("assignmentDetailsContent").innerHTML = [
+        ["Employee", `${employee.name} (${employee.id})`], ["Role", employee.role || "—"],
+        ["Project", `${project.name} (${project.id})`], ["Allocation", `${assignment.allocation}%`],
+        ["Start date", formatDate(assignment.startDate)], ["End date", formatDate(assignment.endDate)],
+        ["Status", assignment.status], ["Skill match", `${match.percent}%`],
+        ["Employee skills", (employee.skills || []).join(", ") || "None specified"],
+        ["Required skills", (project.skills || []).join(", ") || "None specified"],
+        ["Remaining workload", `${availableWorkload(employee.id)}%`]
+      ].map(([label, value]) => `<div><div class="detail-label">${escapeHtml(label)}</div><div class="detail-value">${escapeHtml(value)}</div></div>`).join("");
+      detailsModal.hidden = false;
+    }
+
+    function validateAssignment(candidate) {
+      const employee = employees.find(item => item.id === candidate.employeeId);
+      const project = projects.find(item => item.id === candidate.projectId);
+      if (!employee || !project) return "Select an existing employee and project.";
+      if (!candidate.startDate) return "Select a start date.";
+      if (!Number.isFinite(candidate.allocation) || ![25, 50, 75, 100].includes(candidate.allocation)) return "Choose an allocation of 25%, 50%, 75%, or 100%.";
+      if (candidate.endDate && candidate.endDate < candidate.startDate) return "End date must be on or after the start date.";
+      if (candidate.endDate && project.deadline && candidate.endDate > project.deadline) return "End date cannot be after the project deadline.";
+      if (candidate.status === "Active") {
+        const duplicate = assignments.some(item =>
+          item.id !== editingId && item.employeeId === candidate.employeeId &&
+          item.projectId === candidate.projectId && isActive(item)
+        );
+        if (duplicate) return "This employee already has an active assignment to this project.";
+        const remaining = availableWorkload(employee.id, editingId);
+        if (candidate.allocation > remaining) return `Only ${remaining}% workload remains available for this employee.`;
+      }
+      return "";
+    }
+
+    function saveForm(event) {
+      event.preventDefault();
+      readSelectedAssignmentDetails();
+      if (!selectedEmployeeIds.size) {
+        element("assignmentError").textContent = "Select at least one employee.";
+        return;
+      }
+      const now = new Date().toISOString();
+      const candidates = [...selectedEmployeeIds].map(employeeId => {
+        const details = selectedAssignmentDetails.get(employeeId) || {};
+        const previous = editingId ? assignments.find(item => item.id === editingId) : null;
+        return {
+          ...(previous || {}),
+          id: editingId || "",
+          employeeId,
+          projectId: assignmentProject.value,
+          allocation: Number(details.allocation),
+          startDate: details.startDate,
+          endDate: element("assignmentEnd").value,
+          status: details.status || "Pending",
+          createdAt: previous?.createdAt || now,
+          updatedAt: now
+        };
+      });
+      const validationErrors = candidates.map(candidate => validateAssignment(candidate)).filter(Boolean);
+      const batchActiveAllocation = new Map();
+      const batchActivePairs = new Set();
+      candidates.filter(candidate => candidate.status === "Active").forEach(candidate => {
+        const pair = `${candidate.employeeId}\u0000${candidate.projectId}`;
+        if (batchActivePairs.has(pair)) validationErrors.push(`${candidate.employeeId} is selected more than once for the same project.`);
+        batchActivePairs.add(pair);
+        const total = (batchActiveAllocation.get(candidate.employeeId) || 0) + candidate.allocation;
+        batchActiveAllocation.set(candidate.employeeId, total);
+      });
+      candidates.filter(candidate => candidate.status === "Active").forEach(candidate => {
+        const allowed = availableWorkload(candidate.employeeId, editingId);
+        const batchTotal = batchActiveAllocation.get(candidate.employeeId) || 0;
+        if (batchTotal > allowed) validationErrors.push(`Selected assignments exceed ${candidate.employeeId}'s remaining ${allowed}% workload.`);
+      });
+      if (validationErrors.length) {
+        element("assignmentError").textContent = [...new Set(validationErrors)].join(" ");
+        return;
+      }
+      const mismatchCandidates = candidates.filter(candidate => {
+        const match = skillMatch(employees.find(employee => employee.id === candidate.employeeId), projects.find(project => project.id === candidate.projectId));
+        return match.required.length && match.percent < 50;
+      });
+      if (mismatchCandidates.length) {
+        const mismatchNames = mismatchCandidates.map(candidate =>
+          `${employees.find(employee => employee.id === candidate.employeeId)?.name} (${skillMatch(employees.find(employee => employee.id === candidate.employeeId), projects.find(project => project.id === candidate.projectId)).percent}%)`
+        ).join(", ");
+        if (!window.confirm(`These employees have a low skill match: ${mismatchNames}. Assign anyway?`)) {
+          element("assignmentError").textContent = "Skill mismatch override was cancelled.";
+          return;
+        }
+      }
+      element("assignmentError").textContent = "";
+      let updated;
+      if (editingId) {
+        updated = assignments.map(item => item.id === editingId ? candidates[0] : item);
+      } else {
+        let nextAssignments = [...assignments];
+        const newRecords = candidates.map((candidate, index) => {
+          const id = index === 0 && !assignments.some(item => item.id === element("assignmentId").value)
+            ? element("assignmentId").value
+            : nextId(nextAssignments);
+          const record = { ...candidate, id };
+          nextAssignments.push(record);
+          return record;
+        });
+        updated = nextAssignments;
+        element("assignmentId").value = newRecords[0]?.id || "";
+      }
+      try {
+        persistAssignments(updated);
+        closeModal();
+        showNotice(editingId ? "Assignment updated successfully." : `${candidates.length} assignment${candidates.length === 1 ? "" : "s"} created successfully.`);
+      } catch (error) {
+        showNotice(`Unable to save assignment: ${error.message}`, true);
+      }
+    }
+
+    function updateStatus(id, status) {
+      const current = assignments.find(item => item.id === id);
+      if (!current) return;
+      const candidate = { ...current, status };
+      const previousEditingId = editingId;
+      editingId = id;
+      const error = validateAssignment(candidate, status === "Active" && !isActive(current));
+      editingId = previousEditingId;
+      if (error) {
+        showNotice(error, true);
+        render();
+        return;
+      }
+      try {
+        persistAssignments(assignments.map(item => item.id === id ? { ...candidate, updatedAt: new Date().toISOString() } : item));
+        showNotice(`Assignment status updated to ${status}.`);
+      } catch (saveError) {
+        showNotice(`Unable to update assignment: ${saveError.message}`, true);
+      }
+    }
+
+    function deleteAssignment(id) {
+      const assignment = assignments.find(item => item.id === id);
+      if (!assignment) return;
+      const employee = employees.find(item => item.id === assignment.employeeId);
+      const project = projects.find(item => item.id === assignment.projectId);
+      if (!window.confirm(`Delete assignment ${id} for ${employee?.name || "this employee"} on ${project?.name || "this project"}?`)) return;
+      try {
+        persistAssignments(assignments.filter(item => item.id !== id));
+        showNotice("Assignment deleted.");
+      } catch (error) {
+        showNotice(`Unable to delete assignment: ${error.message}`, true);
+      }
+    }
+
+    assignmentProject.addEventListener("change", () => {
+      readSelectedAssignmentDetails();
+      const project = projects.find(item => item.id === assignmentProject.value);
+      element("assignmentEnd").value = project?.deadline || "";
+      setEmployeeOptions();
+    });
+    employeePicker.addEventListener("change", event => {
+      const checkbox = event.target.closest('input[type="checkbox"]');
+      if (!checkbox) return;
+      readSelectedAssignmentDetails();
+      if (editingId) {
+        checkbox.checked = selectedEmployeeIds.has(checkbox.value);
+        return;
+      }
+      if (checkbox.checked) {
+        selectedEmployeeIds.add(checkbox.value);
+        if (!selectedAssignmentDetails.has(checkbox.value)) {
+          selectedAssignmentDetails.set(checkbox.value, {
+            allocation: "25",
+            startDate: new Date().toISOString().slice(0, 10),
+            status: "Pending"
+          });
+        }
+      } else {
+        selectedEmployeeIds.delete(checkbox.value);
+        selectedAssignmentDetails.delete(checkbox.value);
+      }
+      setEmployeeOptions();
+    });
+    element("selectedEmployees").addEventListener("click", event => {
+      const removeButton = event.target.closest("[data-remove-employee]");
+      if (!removeButton || editingId) return;
+      readSelectedAssignmentDetails();
+      selectedEmployeeIds.delete(removeButton.dataset.removeEmployee);
+      selectedAssignmentDetails.delete(removeButton.dataset.removeEmployee);
+      setEmployeeOptions();
+    });
+    employeeSearch.addEventListener("input", () => {
+      readSelectedAssignmentDetails();
+      setEmployeeOptions();
+    });
+    assignmentForm.addEventListener("submit", saveForm);
+    document.getElementById("newAssignment").addEventListener("click", () => {
+      try {
+        refreshData();
+        if (!projects.length || !employees.length) {
+          showNotice("Add at least one employee and one project before creating an assignment.", true);
+          return;
+        }
+        openForm();
+      } catch (error) {
+        showNotice(`Unable to load assignment options: ${error.message}`, true);
+      }
+    });
+    document.querySelectorAll("[data-close-assignment]").forEach(button => button.addEventListener("click", closeModal));
+    document.querySelectorAll("[data-close-details]").forEach(button => button.addEventListener("click", () => { detailsModal.hidden = true; }));
+    assignmentModal.addEventListener("click", event => { if (event.target === assignmentModal) closeModal(); });
+    detailsModal.addEventListener("click", event => { if (event.target === detailsModal) detailsModal.hidden = true; });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") { closeModal(); detailsModal.hidden = true; }
+    });
+    element("selectedEmployees").addEventListener("change", readSelectedAssignmentDetails);
+    search.addEventListener("input", render);
+    projectFilter.addEventListener("change", render);
+    statusFilter.addEventListener("change", render);
+    rows.addEventListener("click", event => {
+      const button = event.target.closest("[data-action]");
+      if (!button) return;
+      const id = button.closest("tr").dataset.assignmentId;
+      const assignment = assignments.find(item => item.id === id);
+      if (!assignment) return;
+      if (button.dataset.action === "view") showDetails(id);
+      if (button.dataset.action === "edit") openForm(assignment);
+      if (button.dataset.action === "delete") deleteAssignment(id);
+      if (button.dataset.action === "cancel" && window.confirm(`Cancel assignment ${id}? Its active workload will be released.`)) {
+        updateStatus(id, "Cancelled");
+      }
+      if (button.dataset.action === "update-status") updateStatus(id, button.closest("tr").querySelector("[data-status-select]").value);
+    });
+    window.addEventListener("storage", event => {
+      if ([projectKey, assignmentKey, employeesKey].includes(event.key)) {
+        try { refreshData(); } catch (error) { showNotice(`Unable to reload assignment data: ${error.message}`, true); }
+      }
+    });
+
+    try {
+      refreshData();
+    } catch (error) {
+      showNotice(`Unable to load Assignments: ${error.message}`, true);
+      rows.innerHTML = `<tr><td colspan="6" style="padding:28px;text-align:center;color:var(--red)">Assignment data could not be loaded.</td></tr>`;
+    }
+  })();
+</script></body>
+</html>
